@@ -37,7 +37,7 @@ Bu proje **ham MongoDB verilerini yüksek kaliteli SFT (Supervised Fine-Tuning) 
 
 ```mermaid
 graph TB
-    A[Ham MongoDB JSON<br/>8000+ kayıt] --> B{Ortam Konfigürasyonu<br/>.env yükleme}
+    A[Ham MongoDB JSON<br/>500+ kayıt] --> B{Ortam Konfigürasyonu<br/>.env yükleme}
     B --> C[Veri Doğrulama<br/>Yapı kontrolü]
     C --> D{İşleme Modu?}
     

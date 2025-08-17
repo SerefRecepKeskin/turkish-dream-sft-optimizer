@@ -37,7 +37,7 @@ This project is **an intelligent optimization system that transforms raw MongoDB
 
 ```mermaid
 graph TB
-    A[Raw MongoDB JSON<br/>8000+ records] --> B{Environment Config<br/>.env loading}
+    A[Raw MongoDB JSON<br/>500+ records] --> B{Environment Config<br/>.env loading}
     B --> C[Data Validation<br/>Structure check]
     C --> D{Processing Mode?}
     
