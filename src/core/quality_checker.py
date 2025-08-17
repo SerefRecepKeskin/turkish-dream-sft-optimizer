@@ -15,6 +15,18 @@ class QualityChecker:
     """Analyze and validate data quality for SFT training."""
 
     def __init__(self):
+        # Import here to avoid circular imports
+        try:
+            from ..utils.env_config import env_config
+
+            self.min_quality_score = env_config.min_quality_score
+            self.enable_strict_validation = env_config.enable_strict_validation
+            self.max_validation_errors = env_config.max_validation_errors
+        except ImportError:
+            self.min_quality_score = 0.7
+            self.enable_strict_validation = False
+            self.max_validation_errors = 10
+
         self.turkish_dream_keywords = [
             "rüya",
             "rüyada",

@@ -9,10 +9,10 @@ import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
+from ..formatters import CohereFormatter, OpenAIFormatter
 from .data_processor import DreamDataProcessor
-from .formatters import CohereFormatter, OpenAIFormatter
 from .quality_checker import QualityChecker
 
 logger = logging.getLogger(__name__)
@@ -21,19 +21,31 @@ logger = logging.getLogger(__name__)
 class ParallelDreamProcessor:
     """High-performance parallel processor for dream interpretation data."""
 
-    def __init__(self, max_workers: int = None, chunk_size: int = None):
+    def __init__(
+        self, max_workers: Optional[int] = None, chunk_size: Optional[int] = None
+    ):
         """
         Initialize parallel processor.
 
         Args:
-            max_workers: Maximum number of threads (default: CPU cores)
-            chunk_size: Records per chunk (default: auto-calculated)
+            max_workers: Maximum number of threads (default: from env config or CPU cores)
+            chunk_size: Records per chunk (default: from env config or auto-calculated)
         """
+        # Import here to avoid circular imports
+        try:
+            from ..utils.env_config import env_config
+
+            default_max_workers = env_config.max_workers
+            default_chunk_size = env_config.chunk_size
+        except ImportError:
+            default_max_workers = None
+            default_chunk_size = None
+
         self.cpu_count = mp.cpu_count()
-        self.max_workers = max_workers or min(
-            self.cpu_count, 8
+        self.max_workers = (
+            max_workers or default_max_workers or min(self.cpu_count, 8)
         )  # Cap at 8 for efficiency
-        self.chunk_size = chunk_size
+        self.chunk_size = chunk_size or default_chunk_size
 
         # Thread-safe counters
         self._lock = Lock()

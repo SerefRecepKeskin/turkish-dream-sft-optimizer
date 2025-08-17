@@ -18,14 +18,28 @@ logger = logging.getLogger(__name__)
 class DreamDataProcessor:
     """Process and clean Turkish dream interpretation data for SFT training."""
 
-    def __init__(self, min_content_length: int = 100):
+    def __init__(self, min_content_length: Optional[int] = None):
         """
         Initialize the data processor.
 
         Args:
-            min_content_length: Minimum content length for quality filtering
+            min_content_length: Minimum content length for quality filtering.
+                               If None, will use env config value.
         """
-        self.min_content_length = min_content_length
+        # Import here to avoid circular imports
+        try:
+            from ..utils.env_config import env_config
+
+            self.min_content_length = (
+                min_content_length or env_config.min_content_length
+            )
+            self.max_content_length = env_config.max_content_length
+            self.min_cultural_indicators = env_config.min_cultural_indicators
+        except ImportError:
+            self.min_content_length = min_content_length or 100
+            self.max_content_length = 5000
+            self.min_cultural_indicators = 3
+
         self.processed_count = 0
         self.filtered_count = 0
 
