@@ -4,42 +4,36 @@ Turkish Dream Interpretation SFT Dataset Optimizer
 Main execution script for converting MongoDB dream interpretation data
 to optimized SFT training formats for OpenAI and Cohere platforms.
 
-Usage: python main.py --input dreams_500.json --output-dir output/
+Usage: python main.py --input data/raw/dreams_500.json --output-dir output/
 """
 
 import argparse
-import json
-import logging
 import time
 from pathlib import Path
 from typing import Any, Dict
 
-from src.data_processor import DreamDataProcessor
-from src.formatters import CohereFormatter, OpenAIFormatter
-from src.parallel_processor import PerformanceOptimizer, create_parallel_processor
-from src.quality_checker import QualityChecker
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[logging.FileHandler("processing.log"), logging.StreamHandler()],
+from src.core import (
+    DreamDataProcessor,
+    PerformanceOptimizer,
+    QualityChecker,
+    create_parallel_processor,
 )
-logger = logging.getLogger(__name__)
+from src.formatters import CohereFormatter, OpenAIFormatter
+from src.utils import FileHandler, env_config, setup_logger
+
+# Configure logging with utility function and env config
+logger = setup_logger(__name__, log_file=env_config.log_file)
 
 
 def setup_output_directory(output_dir: str) -> Path:
     """Create output directory if it doesn't exist."""
-    output_path = Path(output_dir)
-    output_path.mkdir(parents=True, exist_ok=True)
-    return output_path
+    return FileHandler.ensure_directory(output_dir)
 
 
 def load_input_data(input_file: str) -> list:
     """Load and validate input JSON data."""
     try:
-        with open(input_file, "r", encoding="utf-8") as f:
-            data = json.load(f)
+        data = FileHandler.load_json(input_file)
 
         if not isinstance(data, list):
             raise ValueError("Input data must be a list of dream records")
@@ -104,14 +98,14 @@ def main():
     )
     parser.add_argument(
         "--output-dir",
-        default="output",
-        help="Output directory path (default: output/)",
+        default=env_config.output_dir,
+        help=f"Output directory path (default: {env_config.output_dir})",
     )
     parser.add_argument(
         "--min-content-length",
         type=int,
-        default=100,
-        help="Minimum content length for quality filtering (default: 100)",
+        default=env_config.min_content_length,
+        help=f"Minimum content length for quality filtering (default: {env_config.min_content_length})",
     )
     parser.add_argument(
         "--parallel",
@@ -121,8 +115,8 @@ def main():
     parser.add_argument(
         "--max-workers",
         type=int,
-        default=None,
-        help="Maximum number of parallel workers (default: auto-detect)",
+        default=env_config.max_workers,
+        help=f"Maximum number of parallel workers (default: {env_config.max_workers or 'auto-detect'})",
     )
     parser.add_argument(
         "--benchmark",
@@ -206,46 +200,72 @@ def main():
             cohere_formatter = CohereFormatter()
             cohere_records = cohere_formatter.format_batch(processed_data)
 
-        # Save outputs
+        # Save outputs based on configuration
         logger.info("💾 Saving formatted outputs...")
 
-        # Save OpenAI format
-        openai_file = output_path / "openai_format.jsonl"
-        with open(openai_file, "w", encoding="utf-8") as f:
-            for record in openai_records:
-                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+        # Save processed data (intermediate result) if enabled
+        if env_config.save_processed_data:
+            logger.info("📊 Saving processed data...")
+            processed_data_file = output_path / "processed_data.json"
+            FileHandler.save_json(processed_data, str(processed_data_file))
+        else:
+            processed_data_file = None
 
-        # Save Cohere format
-        cohere_file = output_path / "cohere_format.jsonl"
-        with open(cohere_file, "w", encoding="utf-8") as f:
-            for record in cohere_records:
-                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+        # Save OpenAI format if enabled
+        if env_config.save_openai_format:
+            openai_file = output_path / "openai_format.jsonl"
+            FileHandler.save_jsonl(openai_records, str(openai_file))
+        else:
+            openai_file = None
 
-        # Generate and save quality report
-        processing_time = time.time() - start_time
-        quality_report = generate_quality_report(
-            original_data,
-            processed_data,
-            openai_records,
-            cohere_records,
-            processing_time,
-        )
+        # Save Cohere format if enabled
+        if env_config.save_cohere_format:
+            cohere_file = output_path / "cohere_format.jsonl"
+            FileHandler.save_jsonl(cohere_records, str(cohere_file))
+        else:
+            cohere_file = None
 
-        # Add detailed quality metrics
-        quality_report.update(quality_metrics)
+        # Generate and save quality report if enabled
+        if env_config.save_quality_report:
+            processing_time = time.time() - start_time
+            quality_report = generate_quality_report(
+                original_data,
+                processed_data,
+                openai_records,
+                cohere_records,
+                processing_time,
+            )
 
-        report_file = output_path / "quality_report.json"
-        with open(report_file, "w", encoding="utf-8") as f:
-            json.dump(quality_report, f, indent=2, ensure_ascii=False)
+            # Add detailed quality metrics
+            quality_report.update(quality_metrics)
+
+            report_file = output_path / "quality_report.json"
+            FileHandler.save_json(quality_report, str(report_file))
+        else:
+            report_file = None
 
         # Success summary
+        processing_time = time.time() - start_time
         logger.info("✨ Processing completed successfully!")
         logger.info(
             f"📊 Processed {len(processed_data)} records in {processing_time:.2f} seconds"
         )
-        logger.info(f"📁 OpenAI format: {openai_file} ({len(openai_records)} records)")
-        logger.info(f"📁 Cohere format: {cohere_file} ({len(cohere_records)} records)")
-        logger.info(f"📁 Quality report: {report_file}")
+
+        # Log saved files based on what was actually saved
+        if processed_data_file:
+            logger.info(
+                f"📁 Processed data: {processed_data_file} ({len(processed_data)} records)"
+            )
+        if openai_file:
+            logger.info(
+                f"📁 OpenAI format: {openai_file} ({len(openai_records)} records)"
+            )
+        if cohere_file:
+            logger.info(
+                f"📁 Cohere format: {cohere_file} ({len(cohere_records)} records)"
+            )
+        if report_file:
+            logger.info(f"📁 Quality report: {report_file}")
 
         # Performance check
         if processing_time < 60:  # Under 1 minute requirement
