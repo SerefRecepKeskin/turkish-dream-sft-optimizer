@@ -28,7 +28,225 @@ python3 main.py --input dreams_500.json --output-dir output/ --parallel
 python3 main.py --input dreams_500.json --output-dir output/ --parallel --benchmark
 ```
 
-## 📊 Problem Analysis
+## 🧠 Theoretical Foundation & Working Mechanism
+
+### Project Core Philosophy
+This project is **an intelligent optimization system that transforms raw MongoDB data into high-quality SFT (Supervised Fine-Tuning) datasets**. Our main goal is to **train modern AI models while preserving Turkish dream interpretation traditions** by producing data in appropriate format and quality.
+
+### 🔄 Processing Flow Architecture
+
+```mermaid
+graph TB
+    A[Raw MongoDB JSON<br/>8000+ records] --> B{Environment Config<br/>.env loading}
+    B --> C[Data Validation<br/>Structure check]
+    C --> D{Processing Mode?}
+    
+    D -->|Sequential| E[Sequential Processor<br/>Single-threaded]
+    D -->|Parallel| F[Parallel Processor<br/>Multi-threaded]
+    
+    E --> G[Content Cleaning Pipeline]
+    F --> H[Chunk Distribution<br/>Worker Management]
+    H --> I[Parallel Cleaning Pipeline]
+    
+    G --> J[Quality Analysis<br/>Cultural Indicators]
+    I --> J
+    
+    J --> K{Quality Filter<br/>Min score check}
+    K -->|Pass| L[Multi-Format Generation]
+    K -->|Fail| M[Discard Record]
+    
+    L --> N[OpenAI Messages Format]
+    L --> O[Cohere Prompt-Completion]
+    L --> P[Processed Data JSON]
+    
+    N --> Q[Output Files<br/>JSONL/JSON]
+    O --> Q
+    P --> Q
+    
+    Q --> R[Quality Report<br/>Performance Metrics]
+```
+
+### 🏭 Data Processing Pipeline
+
+#### Stage 1: Data Ingestion & Validation
+```bash
+Raw MongoDB Export → Structure Validation → Field Mapping
+```
+- **Input**: JSON file (like dreams_500.json)
+- **Validation**: Required fields check (title, content, url)
+- **Preprocessing**: Metadata cleaning and field standardization
+
+#### Stage 2: Content Cleaning Engine
+```bash
+HTML Content → BeautifulSoup → Text Extraction → Cultural Preservation
+```
+- **HTML Cleaning**: Tag removal, formatting cleanup
+- **Symbol Extraction**: Dream symbols automatic detection
+- **Cultural Context**: Turkish keywords and Islamic indicators
+- **Quality Scoring**: Content quality and readability analysis
+
+#### Stage 3: Parallel Processing Architecture
+```bash
+# Sequential Mode (default for <50 records)
+Single Thread → Record by Record → Linear Processing
+
+# Parallel Mode (recommended for >50 records)  
+Main Thread → Chunk Creation → Worker Threads → Result Aggregation
+```
+
+#### Stage 4: Quality Analysis & Filtering
+```bash
+Content → Cultural Indicators Check → Quality Score → Filter Decision
+```
+- **Cultural Indicators**: 19 Turkish keywords scoring system
+- **Quality Metrics**: Length, readability, context analysis
+- **Filtering**: Minimum quality threshold application
+
+#### Stage 5: Multi-Format Generation
+```bash
+Cleaned Data → Platform-Specific Formatters → Output Generation
+```
+
+### 🔀 Processing Modes Comparison
+
+#### Sequential Processing Flow
+```
+┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐
+│   Record 1      │ -> │   Process    │ -> │   Format       │
+│   (HTML clean)  │    │   (quality)  │    │   (OpenAI)     │
+└─────────────────┘    └──────────────┘    └─────────────────┘
+┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐
+│   Record 2      │ -> │   Process    │ -> │   Format       │
+│   (HTML clean)  │    │   (quality)  │    │   (Cohere)     │
+└─────────────────┘    └──────────────┘    └─────────────────┘
+
+⏱️ Time: Linear → O(n) complexity
+💾 Memory: Low usage, single record at time
+🎯 Best for: <50 records, debugging, low-resource systems
+```
+
+#### Parallel Processing Flow
+```
+┌─────────────────┐    ┌──────────────────────────────┐
+│   Input Data    │ -> │      Chunk Distribution      │
+│   (500 records) │    │   [50][50][50]...[workers]   │
+└─────────────────┘    └──────────────────────────────┘
+                                     │
+           ┌─────────────────────────┼─────────────────────────┐
+           ▼                         ▼                         ▼
+    ┌─────────────┐          ┌─────────────┐          ┌─────────────┐
+    │  Worker 1   │          │  Worker 2   │          │  Worker N   │
+    │ Chunk[0:50] │          │ Chunk[50:100│          │ Chunk[N:End]│
+    │ ├─Clean HTML │          │ ├─Clean HTML│          │ ├─Clean HTML│
+    │ ├─Extract   │          │ ├─Extract   │          │ ├─Extract   │
+    │ └─Quality   │          │ └─Quality   │          │ └─Quality   │
+    └─────────────┘          └─────────────┘          └─────────────┘
+           │                         │                         │
+           └─────────────────────────┼─────────────────────────┘
+                                     ▼
+                            ┌─────────────────┐
+                            │ Result Merge    │
+                            │ Format Generate │
+                            │ Quality Report  │
+                            └─────────────────┘
+
+⏱️ Time: Parallel → O(n/workers) complexity  
+💾 Memory: Higher usage, multiple chunks
+🎯 Best for: >50 records, production, high-performance systems
+```
+
+### 🎯 Quality Scoring System
+
+#### Cultural Indicators Algorithm
+```python
+# Turkish Dream Keywords (19 total)
+cultural_score = sum(keyword in content.lower() for keyword in [
+    "rüya", "rüyada", "görmek", "tabir", "yorumlanır", 
+    "delalet", "işaret", "anlam", "bereket", "rızk", ...
+])
+
+# Quality Decision Matrix
+if cultural_score >= 3:  # Strong Turkish context
+    quality_bonus = +20
+elif cultural_score >= 1:  # Some Turkish context  
+    quality_bonus = +0
+else:  # No Turkish context
+    quality_penalty = -20
+```
+
+#### Content Quality Pipeline
+```bash
+Initial Score: 100
+├─ Length Check: 100-5000 chars ideal
+├─ Cultural Context: 3+ Turkish keywords required  
+├─ Readability: Sentence structure analysis
+├─ Repetition: Word frequency analysis
+└─ Final Score: 0-100 (min 70 required)
+```
+
+### 🏗️ Architecture Benefits
+
+#### Modular Design Pattern
+```
+Core Business Logic (src/core/)
+├─ DreamDataProcessor: HTML cleaning, symbol extraction
+├─ ParallelProcessor: Worker management, performance optimization  
+└─ QualityChecker: Cultural scoring, content validation
+
+Platform Formatters (src/formatters/)  
+├─ OpenAI: Conversation messages format
+├─ Cohere: Prompt-completion format
+└─ Base: Common interface and validation
+
+Utility Layer (src/utils/)
+├─ FileHandler: I/O operations, directory management
+├─ EnvConfig: Environment configuration management
+├─ Logger: Structured logging, progress tracking
+└─ Validators: Data integrity, format compliance
+```
+
+#### Environment-Driven Configuration
+```bash
+# Configuration Priority Chain
+Command Line Args → .env Variables → Default Values
+
+# Example Flow
+python3 main.py --parallel --max-workers 4
+                ↓
+        Override .env MAX_WORKERS=8  
+                ↓
+        Final value: 4 (CLI wins)
+```
+
+### 🚀 Performance Optimization Strategy
+
+#### Automatic Worker Optimization
+```python
+# Dynamic Worker Count Calculation
+cpu_count = multiprocessing.cpu_count()
+dataset_size = len(input_records)
+
+if dataset_size < 50:
+    mode = "sequential"  # No parallelization overhead
+elif dataset_size < 500:
+    workers = min(4, cpu_count)  # Conservative parallelization
+else:
+    workers = min(8, cpu_count)  # Aggressive parallelization
+```
+
+#### Memory Management
+```bash
+# Chunk Size Calculation
+chunk_size = max(10, dataset_size // (workers * 2))
+
+# Benefits:
+- Prevents memory overflow
+- Optimizes cache usage  
+- Enables progress tracking
+- Allows graceful error recovery
+```
+
+### 📊 Problem Analysis
 
 ### Initial Challenges
 - **Raw MongoDB Data**: 8K+ records with extensive metadata noise
@@ -185,15 +403,15 @@ python main.py --input data/raw/dreams_500.json --output-dir output/
   "messages": [
     {
       "role": "system",
-      "content": "Sen uzman bir Türk rüya yorumcususun..."
+      "content": "You are an expert Turkish dream interpreter..."
     },
     {
       "role": "user", 
-      "content": "Rüyamda fare gördüm, ne anlama gelir?"
+      "content": "I saw a mouse in my dream, what does it mean?"
     },
     {
       "role": "assistant",
-      "content": "Rüyada fare görmek genellikle..."
+      "content": "Seeing a mouse in a dream generally..."
     }
   ]
 }
@@ -202,8 +420,8 @@ python main.py --input data/raw/dreams_500.json --output-dir output/
 ### Cohere Format (cohere_format.jsonl)
 ```json
 {
-  "prompt": "Sen uzman bir Türk rüya yorumcususun...\n\nSoru: Rüyamda fare gördüm, ne anlama gelir?\n\nCevap:",
-  "completion": "Rüyada fare görmek genellikle..."
+  "prompt": "You are an expert Turkish dream interpreter...\n\nQuestion: I saw a mouse in my dream, what does it mean?\n\nAnswer:",
+  "completion": "Seeing a mouse in a dream generally..."
 }
 ```
 
@@ -458,8 +676,6 @@ python3 main.py --input dreams_500.json --output-dir output/
 
 ## 📝 Development
 
-## 📝 Development
-
 ### Project Structure
 The project follows a modular architecture with clear separation of concerns:
 
@@ -513,47 +729,13 @@ def custom_utility_function():
 
 1. Fork the repository
 2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Make your changes following the project structure
-4. Test your changes: `python3 main.py --input dreams_500.json --output-dir test_output/`
-5. Commit changes: `git commit -m 'Add amazing feature'`
-6. Push to branch: `git push origin feature/amazing-feature`
-7. Open Pull Request
-
-### Development Guidelines
-- Follow the modular architecture pattern
-- Add appropriate logging and error handling
-- Update documentation for new features
-- Test with sample data before submitting
-- Maintain backward compatibility
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Turkish cultural dream interpretation traditions
-- MongoDB document structure optimization
-- OpenAI and Cohere fine-tuning best practices
-- BeautifulSoup for robust HTML processing
-- Python multiprocessing for performance optimization
-- python-dotenv for environment configuration management
-
----
-
-**🎯 Target Achievement**: Optimized SFT dataset preparation with modular architecture, parallel processing, and flexible environment-based configuration.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
 3. Commit changes: `git commit -m 'Add amazing feature'`
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Open Pull Request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
@@ -561,7 +743,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - MongoDB document structure optimization
 - OpenAI and Cohere fine-tuning best practices
 - BeautifulSoup for robust HTML processing
-
----
-
-**🎯 Target Achievement**: 70%+ training accuracy improvement through optimized SFT dataset preparation.
