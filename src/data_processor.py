@@ -183,14 +183,70 @@ class DreamDataProcessor:
         # Check for minimum cultural context
         content = record["cleaned_content"].lower()
         turkish_indicators = [
+            # Temel rüya kelimeleri
             "rüya",
             "rüyada",
+            "rüyası",
+            "rüyalar",
+            # Görme fiilleri
             "görmek",
+            "görür",
+            "görenin",
+            "gören",
+            # Yorum ve anlam kelimeleri
             "yorumlanır",
+            "yorumu",
+            "yorumlar",
             "delalet",
+            "delalet eder",
             "tabir",
+            "tabiri",
+            "anlamı",
+            "anlama gelir",
+            "manası",
+            "işaret",
+            "işareti",
+            "alamet",
+            "belirtisi",
+            # Dini/kültürel terimler
+            "hayırlı",
+            "hayırsız",
+            "müjde",
+            "uyarı",
+            "bereket",
+            "şifa",
+            "rahmet",
+            "kısmet",
+            "nasip",
+            "rızık",
+            "sevap",
+            "günah",
+            "haram",
+            "helal",
+            # Duygusal durumlar
+            "sevinç",
+            "üzüntü",
+            "korku",
+            "endişe",
+            "huzur",
+            "sıkıntı",
+            "mutluluk",
+            "kaygı",
+            # Yaygın rüya yorumu ifadeleri
+            "ileride",
+            "gelecekte",
+            "yakında",
+            "başına gelecek",
+            "karşılaşacak",
+            "yaşayacak",
+            "elde edecek",
         ]
-        if not any(indicator in content for indicator in turkish_indicators):
+
+        # En az 2 farklı indicator olmalı (daha güvenilir)
+        indicator_count = sum(
+            1 for indicator in turkish_indicators if indicator in content
+        )
+        if indicator_count < 2:
             return False
 
         return True

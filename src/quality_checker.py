@@ -161,16 +161,32 @@ class QualityChecker:
             (symbol, count) for symbol, count in symbol_counts.items() if count == 1
         ]
 
-        # Calculate coverage balance
-        coverage_balance = unique_symbols / max(total_symbols, 1) * 100
+        # Calculate meaningful balance metrics
+        if symbol_counts:
+            # Distribution balance: How balanced is the distribution? (0-100, higher = better)
+            most_common_count = symbol_counts.most_common(1)[0][1]
+            dominance_ratio = most_common_count / total_symbols * 100
+            distribution_balance = max(0, 100 - dominance_ratio)
+
+            # Coverage quality: What % of symbols have good representation (5+ instances)?
+            well_represented = sum(1 for count in symbol_counts.values() if count >= 5)
+            coverage_quality = (
+                (well_represented / unique_symbols * 100) if unique_symbols > 0 else 0
+            )
+        else:
+            distribution_balance = 0
+            coverage_quality = 0
 
         return {
             "total_symbol_instances": total_symbols,
             "unique_symbols": unique_symbols,
-            "coverage_balance": coverage_balance,
+            "distribution_balance_score": round(distribution_balance, 2),
+            "coverage_quality_score": round(coverage_quality, 2),
             "most_common_symbols": most_common_symbols,
             "singleton_symbols": len(least_common_symbols),
-            "avg_instances_per_symbol": total_symbols / max(unique_symbols, 1),
+            "avg_instances_per_symbol": round(
+                total_symbols / max(unique_symbols, 1), 2
+            ),
         }
 
     def analyze_content_completeness(
@@ -383,7 +399,7 @@ class QualityChecker:
             completeness["overall_completeness"],
             training_readiness["training_readiness_percentage"],
             cultural_authenticity["average_cultural_authenticity"],
-            symbol_coverage["coverage_balance"],
+            symbol_coverage["distribution_balance_score"],
         ]
 
         overall_quality_score = sum(overall_scores) / len(overall_scores)
