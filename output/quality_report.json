@@ -1,0 +1,131 @@
+{
+  "processing_summary": {
+    "total_processing_time_seconds": 0.55,
+    "original_record_count": 500,
+    "processed_record_count": 499,
+    "data_retention_rate": 99.8
+  },
+  "output_formats": {
+    "openai_records": 1996,
+    "cohere_records": 1996,
+    "format_consistency": true
+  },
+  "quality_metrics": {
+    "average_content_length": 0,
+    "records_with_tags": 0,
+    "html_cleaned_rate": 100.0,
+    "cultural_context_preserved": true
+  },
+  "improvement_indicators": {
+    "content_quality_score": "HIGH",
+    "format_compliance": "PERFECT",
+    "training_readiness": "OPTIMIZED"
+  },
+  "quality_summary": {
+    "overall_quality_score": 78.83,
+    "quality_grade": "GOOD",
+    "total_records_analyzed": 499
+  },
+  "symbol_coverage_analysis": {
+    "total_symbol_instances": 499,
+    "unique_symbols": 341,
+    "distribution_balance_score": 97.39,
+    "coverage_quality_score": 2.93,
+    "most_common_symbols": [
+      [
+        "kırmızı",
+        13
+      ],
+      [
+        "eski",
+        12
+      ],
+      [
+        "eşinin",
+        9
+      ],
+      [
+        "kedinin",
+        7
+      ],
+      [
+        "kendini",
+        6
+      ],
+      [
+        "mavi",
+        6
+      ],
+      [
+        "köpek",
+        5
+      ],
+      [
+        "evin",
+        5
+      ],
+      [
+        "evli",
+        5
+      ],
+      [
+        "küs",
+        5
+      ]
+    ],
+    "singleton_symbols": 261,
+    "avg_instances_per_symbol": 1.46
+  },
+  "content_completeness_analysis": {
+    "total_records": 499,
+    "completeness_counts": {
+      "has_title": 499,
+      "has_content": 499,
+      "has_dream_symbol": 499,
+      "has_tags": 499,
+      "has_description": 499,
+      "has_seo_title": 496,
+      "has_url": 499
+    },
+    "completeness_percentages": {
+      "has_title": 100.0,
+      "has_content": 100.0,
+      "has_dream_symbol": 100.0,
+      "has_tags": 100.0,
+      "has_description": 100.0,
+      "has_seo_title": 99.39879759519037,
+      "has_url": 100.0
+    },
+    "overall_completeness": 100.0
+  },
+  "training_readiness_analysis": {
+    "training_ready_count": 499,
+    "training_readiness_percentage": 100.0,
+    "average_quality_score": 99.57915831663327,
+    "quality_distribution": {
+      "excellent": 493,
+      "good": 6,
+      "fair": 0,
+      "poor": 0
+    },
+    "recommendations": [
+      "Consider data augmentation to increase dataset size"
+    ]
+  },
+  "cultural_authenticity_analysis": {
+    "average_cultural_authenticity": 17.925851703406813,
+    "records_with_traditional_context": 468,
+    "records_with_islamic_context": 118,
+    "traditional_context_percentage": 93.78757515030061,
+    "islamic_context_percentage": 23.647294589178355,
+    "cultural_authenticity_distribution": {
+      "high": 8,
+      "medium": 256,
+      "low": 235
+    }
+  },
+  "improvement_recommendations": [
+    "Enhance cultural context preservation in content cleaning",
+    "High training readiness - consider advanced data augmentation"
+  ]
+}
