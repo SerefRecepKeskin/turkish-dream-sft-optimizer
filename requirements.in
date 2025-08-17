@@ -1,0 +1,15 @@
+# Turkish Dream SFT Optimizer Dependencies
+# Core data processing
+beautifulsoup4
+lxml
+
+# Performance optimization  
+ujson
+
+# Development and testing (optional)
+pytest
+black
+flake8
+
+# Logging and utilities
+python-dateutil
