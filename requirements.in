@@ -3,6 +3,9 @@
 beautifulsoup4
 lxml
 
+# Environment configuration
+python-dotenv
+
 # Performance optimization  
 ujson
 

@@ -40,6 +40,8 @@ pytest==8.4.1
     # via -r requirements.in
 python-dateutil==2.9.0.post0
     # via -r requirements.in
+python-dotenv==1.1.1
+    # via -r requirements.in
 six==1.17.0
     # via python-dateutil
 soupsieve==2.7
