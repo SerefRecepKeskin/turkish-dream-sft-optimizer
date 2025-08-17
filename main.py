@@ -16,6 +16,7 @@ from typing import Any, Dict
 
 from src.data_processor import DreamDataProcessor
 from src.formatters import CohereFormatter, OpenAIFormatter
+from src.parallel_processor import PerformanceOptimizer, create_parallel_processor
 from src.quality_checker import QualityChecker
 
 # Configure logging
@@ -112,6 +113,22 @@ def main():
         default=100,
         help="Minimum content length for quality filtering (default: 100)",
     )
+    parser.add_argument(
+        "--parallel",
+        action="store_true",
+        help="Enable parallel processing for better performance",
+    )
+    parser.add_argument(
+        "--max-workers",
+        type=int,
+        default=None,
+        help="Maximum number of parallel workers (default: auto-detect)",
+    )
+    parser.add_argument(
+        "--benchmark",
+        action="store_true",
+        help="Run performance benchmark before processing",
+    )
 
     args = parser.parse_args()
 
@@ -130,25 +147,64 @@ def main():
         logger.info("📁 Loading input data...")
         original_data = load_input_data(args.input)
 
-        # Process data
-        logger.info("🔄 Processing and cleaning data...")
-        processor = DreamDataProcessor(min_content_length=args.min_content_length)
-        processed_data = processor.process_batch(original_data)
+        # Run benchmark if requested
+        if args.benchmark:
+            logger.info("🔧 Running performance benchmark...")
+            benchmark_results = PerformanceOptimizer.benchmark_processing_speed(
+                original_data[:20]  # Use first 20 records for benchmark
+            )
+            logger.info(
+                f"📊 Benchmark: {benchmark_results['records_per_second']:.1f} records/sec"
+            )
 
-        # Quality check
-        logger.info("✅ Running quality checks...")
-        quality_checker = QualityChecker()
-        quality_metrics = quality_checker.analyze_batch(processed_data)
+        # Choose processing method
+        if (
+            args.parallel and len(original_data) > 50
+        ):  # Only parallel for larger datasets
+            logger.info("🚀 Using parallel processing...")
 
-        # Format for OpenAI
-        logger.info("🤖 Generating OpenAI format...")
-        openai_formatter = OpenAIFormatter()
-        openai_records = openai_formatter.format_batch(processed_data)
+            # Create parallel processor
+            parallel_processor = create_parallel_processor(
+                record_count=len(original_data),
+                max_workers=args.max_workers,
+                auto_optimize=True,
+            )
 
-        # Format for Cohere
-        logger.info("🧠 Generating Cohere format...")
-        cohere_formatter = CohereFormatter()
-        cohere_records = cohere_formatter.format_batch(processed_data)
+            # Process in parallel
+            config = {"min_content_length": args.min_content_length}
+            results = parallel_processor.process_parallel(original_data, config)
+
+            processed_data = results["processed_records"]
+            openai_records = results["openai_records"]
+            cohere_records = results["cohere_records"]
+
+            # Quality check on processed data
+            logger.info("✅ Running quality checks...")
+            quality_checker = QualityChecker()
+            quality_metrics = quality_checker.analyze_batch(processed_data)
+
+        else:
+            # Sequential processing (original method)
+            logger.info("🔄 Using sequential processing...")
+
+            # Process data
+            processor = DreamDataProcessor(min_content_length=args.min_content_length)
+            processed_data = processor.process_batch(original_data)
+
+            # Quality check
+            logger.info("✅ Running quality checks...")
+            quality_checker = QualityChecker()
+            quality_metrics = quality_checker.analyze_batch(processed_data)
+
+            # Format for OpenAI
+            logger.info("🤖 Generating OpenAI format...")
+            openai_formatter = OpenAIFormatter()
+            openai_records = openai_formatter.format_batch(processed_data)
+
+            # Format for Cohere
+            logger.info("🧠 Generating Cohere format...")
+            cohere_formatter = CohereFormatter()
+            cohere_records = cohere_formatter.format_batch(processed_data)
 
         # Save outputs
         logger.info("💾 Saving formatted outputs...")
