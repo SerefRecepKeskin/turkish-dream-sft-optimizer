@@ -284,10 +284,6 @@ turkish-dream-sft-optimizer/
 │       └── env_config.py     # Environment configuration
 ├── .env                       # Environment configuration file
 ├── .env.example              # Environment configuration template
-├── data/                      # Data directories
-│   ├── raw/                  # Raw input data
-│   ├── processed/            # Intermediate processed data
-│   └── samples/              # Sample/test data
 ├── output/                    # Generated outputs
 │   ├── openai_format.jsonl
 │   ├── cohere_format.jsonl
@@ -392,7 +388,7 @@ export MAX_CONTENT_LENGTH=5000
 export MIN_CULTURAL_INDICATORS=3
 
 # Run with environment configuration
-python main.py --input data/raw/dreams_500.json --output-dir output/
+python main.py --input dreams_500.json --output-dir output/
 ```
 
 ## 📈 Output Formats
@@ -570,10 +566,10 @@ with open('output/cohere_format.jsonl') as f:
 ### Performance Testing
 ```bash
 # Run with benchmark mode
-python main.py --input data/raw/dreams_500.json --output-dir output/ --benchmark
+python main.py --input dreams_500.json --output-dir output/ --benchmark
 
 # Test parallel vs sequential performance
-python main.py --input data/raw/dreams_500.json --output-dir output/ --parallel --benchmark
+python main.py --input dreams_500.json --output-dir output/ --parallel --benchmark
 ```
 
 ### Output Quality Check
@@ -611,57 +607,6 @@ with open('output/quality_report.json') as f:
 - **Format Compliance**: Strict adherence to OpenAI and Cohere format requirements
 - **Error Recovery**: Robust error handling and graceful degradation
 
-## 🛠️ Troubleshooting
-
-### Common Issues
-
-**Issue**: Import errors from src modules
-```bash
-# Solution: Ensure you're in the project root directory
-cd turkish-dream-sft-optimizer
-python main.py --input data/raw/dreams_500.json --output-dir output/
-```
-
-**Issue**: `FileNotFoundError` for input data
-```bash
-# Solution: Check file path and verify data structure
-ls -la data/raw/dreams_500.json
-python main.py --input data/raw/dreams_500.json --output-dir output/
-```
-
-**Issue**: Performance slower than expected
-```bash
-# Solution: Enable parallel processing for large datasets
-python main.py --input data/raw/dreams_500.json --output-dir output/ --parallel --max-workers 4
-```
-
-**Issue**: Memory usage too high
-```bash
-# Solution: Reduce batch size or increase minimum content length
-python main.py --input data/raw/dreams_500.json --output-dir output/ --min-content-length 150
-```
-
-### Performance Tuning
-```bash
-# For optimal performance on large datasets
-python main.py \
-  --input data/raw/dreams_500.json \
-  --output-dir output/ \
-  --parallel \
-  --max-workers 8 \
-  --min-content-length 100 \
-  --benchmark
-```
-
-### Debug Mode
-```bash
-# Enable detailed logging for troubleshooting
-echo "LOG_LEVEL=DEBUG" >> .env
-python3 main.py --input dreams_500.json --output-dir output/
-
-# Or override temporarily
-LOG_LEVEL=DEBUG python3 main.py --input dreams_500.json --output-dir output/
-```
 
 ### Selective Output Generation
 ```bash
@@ -683,55 +628,6 @@ The project follows a modular architecture with clear separation of concerns:
 - **`src/formatters/`**: Platform-specific format generation
 - **`src/utils/`**: Shared utilities and helpers
 - **`docs/`**: Documentation and guides
-
-### Adding New Formatters
-```python
-# Create custom formatter in src/formatters/
-from src.formatters.base import BaseSFTFormatter
-
-class CustomFormatter(BaseSFTFormatter):
-    def format_single_record(self, record):
-        """Custom implementation for new platform."""
-        return {
-            "custom_format": "implementation",
-            "record": record
-        }
-```
-
-### Extending Processing Logic
-```python
-# Extend core processors in src/core/
-from src.core.data_processor import DreamDataProcessor
-
-class EnhancedProcessor(DreamDataProcessor):
-    def custom_cleaning_step(self, content):
-        """Add custom content cleaning logic."""
-        # Custom implementation
-        return cleaned_content
-```
-
-### Adding Utilities
-```python
-# Create new utilities in src/utils/
-from src.utils.logger import setup_logger
-from src.utils.env_config import env_config
-
-logger = setup_logger(__name__)
-
-def custom_utility_function():
-    """Add custom utility functions."""
-    min_length = env_config.min_content_length
-    logger.info(f"Using min content length: {min_length}")
-    return result
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open Pull Request
 
 ## 📄 License
 

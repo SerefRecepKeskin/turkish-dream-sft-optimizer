@@ -284,10 +284,6 @@ turkish-dream-sft-optimizer/
 │       └── env_config.py     # Ortam konfigürasyonu
 ├── .env                       # Ortam konfigürasyon dosyası
 ├── .env.example              # Ortam konfigürasyon şablonu
-├── data/                      # Veri dizinleri
-│   ├── raw/                  # Ham girdi verisi
-│   ├── processed/            # Ara işlenmiş veri
-│   └── samples/              # Örnek/test verisi
 ├── output/                    # Üretilen çıktılar
 │   ├── openai_format.jsonl
 │   ├── cohere_format.jsonl
@@ -392,7 +388,7 @@ export MAX_CONTENT_LENGTH=5000
 export MIN_CULTURAL_INDICATORS=3
 
 # Ortam konfigürasyonu ile çalıştır
-python main.py --input data/raw/dreams_500.json --output-dir output/
+python main.py --input dreams_500.json --output-dir output/
 ```
 
 ## 📈 Çıktı Formatları
@@ -570,10 +566,10 @@ with open('output/cohere_format.jsonl') as f:
 ### Performans Testi
 ```bash
 # Benchmark modu ile çalıştır
-python main.py --input data/raw/dreams_500.json --output-dir output/ --benchmark
+python main.py --input dreams_500.json --output-dir output/ --benchmark
 
 # Paralel vs sıralı performans testi
-python main.py --input data/raw/dreams_500.json --output-dir output/ --parallel --benchmark
+python main.py --input dreams_500.json --output-dir output/ --parallel --benchmark
 ```
 
 ### Çıktı Kalite Kontrolü
@@ -611,41 +607,12 @@ with open('output/quality_report.json') as f:
 - **Format Uyumluluğu**: OpenAI ve Cohere format gereksinimlerine sıkı bağlılık
 - **Hata Kurtarma**: Sağlam hata işleme ve zarif bozulma
 
-## 🛠️ Sorun Giderme
-
-### Yaygın Sorunlar
-
-**Sorun**: src modüllerinden import hataları
-```bash
-# Çözüm: Proje kök dizininde olduğunuzdan emin olun
-cd turkish-dream-sft-optimizer
-python main.py --input data/raw/dreams_500.json --output-dir output/
-```
-
-**Sorun**: Girdi verisi için `FileNotFoundError`
-```bash
-# Çözüm: Dosya yolunu kontrol edin ve veri yapısını doğrulayın
-ls -la data/raw/dreams_500.json
-python main.py --input data/raw/dreams_500.json --output-dir output/
-```
-
-**Sorun**: Beklenenden yavaş performans
-```bash
-# Çözüm: Büyük veri setleri için paralel işlemeyi etkinleştirin
-python main.py --input data/raw/dreams_500.json --output-dir output/ --parallel --max-workers 4
-```
-
-**Sorun**: Çok yüksek bellek kullanımı
-```bash
-# Çözüm: Toplu boyutu azaltın veya minimum içerik uzunluğunu artırın
-python main.py --input data/raw/dreams_500.json --output-dir output/ --min-content-length 150
-```
 
 ### Performans Ayarlama
 ```bash
 # Büyük veri setlerinde optimal performans için
 python main.py \
-  --input data/raw/dreams_500.json \
+  --input dreams_500.json \
   --output-dir output/ \
   --parallel \
   --max-workers 8 \
@@ -684,57 +651,6 @@ Proje endişelerin net ayrımı ile modüler mimariyi takip eder:
 - **`src/utils/`**: Paylaşılan yardımcı araçlar ve yardımcılar
 - **`docs/`**: Dokümantasyon ve rehberler
 
-### Yeni Formatlayıcı Ekleme
-```python
-# src/formatters/ içinde özel formatlayıcı oluştur
-from src.formatters.base import BaseSFTFormatter
-
-class CustomFormatter(BaseSFTFormatter):
-    def format_single_record(self, record):
-        """Yeni platform için özel implementasyon."""
-        return {
-            "custom_format": "implementasyon",
-            "record": record
-        }
-```
-
-### İşleme Mantığını Genişletme
-```python
-# src/core/ içinde temel işlemcileri genişlet
-from src.core.data_processor import DreamDataProcessor
-
-class EnhancedProcessor(DreamDataProcessor):
-    def custom_cleaning_step(self, content):
-        """Özel içerik temizleme mantığı ekle."""
-        # Özel implementasyon
-        return cleaned_content
-```
-
-### Yardımcı Araç Ekleme
-```python
-# src/utils/ içinde yeni yardımcı araçlar oluştur
-from src.utils.logger import setup_logger
-from src.utils.env_config import env_config
-
-logger = setup_logger(__name__)
-
-def custom_utility_function():
-    """Özel yardımcı fonksiyonlar ekle."""
-    min_length = env_config.min_content_length
-    logger.info(f"Minimum içerik uzunluğu kullanılıyor: {min_length}")
-    return result
-```
-
-## 🤝 Katkıda Bulunma
-
-1. Depoyu fork edin
-2. Özellik dalı oluşturun: `git checkout -b feature/harika-ozellik`
-3. Proje yapısını takip ederek değişikliklerinizi yapın
-4. Değişikliklerinizi test edin: `python3 main.py --input dreams_500.json --output-dir test_output/`
-5. Değişiklikleri commit edin: `git commit -m 'Harika özellik ekle'`
-6. Dala push edin: `git push origin feature/harika-ozellik`
-7. Pull Request açın
-
 ### Geliştirme Yönergeleri
 - Modüler mimari desenini takip edin
 - Uygun loglama ve hata işleme ekleyin
@@ -754,7 +670,3 @@ Bu proje MIT Lisansı altında lisanslanmıştır - detaylar için [LICENSE](LIC
 - Sağlam HTML işleme için BeautifulSoup
 - Performans optimizasyonu için Python multiprocessing
 - Ortam konfigürasyon yönetimi için python-dotenv
-
----
-
-**🎯 Hedef Başarı**: Modüler mimari, paralel işleme ve esnek ortam tabanlı konfigürasyon ile optimize edilmiş SFT veri seti hazırlığı.
